@@ -1,5 +1,5 @@
-@startuml UKLabsMS_Domain_Model_v2
-title UKLabsMS - Glossary Model / Modelo do Glossário
+@startuml Glossary
+title - Glossary Model
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam monochrome true
