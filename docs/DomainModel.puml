@@ -1,0 +1,147 @@
+@startuml UKLabs_DomainModel
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam classFontStyle bold
+skinparam ArrowColor black
+skinparam ClassBorderColor #555555
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 70
+hide circle
+hide empty members
+
+
+
+
+
+class UKLabs #dae8fc {
+  fullName : String
+  companyAddress : String
+  typeOfSociety : String
+  foundingDate : Date
+  nrOfEmployees : int
+}
+class Headquarters #dae8fc
+class Laboratory #dae8fc {
+  code : String
+  address : String
+  phoneNumber : String
+  emailAddress : String
+  openingHour : Time
+  closingHour : Time
+}
+abstract class Person #e1d5e7 {
+  name : String
+  gender : String
+  dateOfBirth : Date
+}
+class Administrator #d5e8d4
+class ClinicalChemistryTechnologist #d5e8d4
+class MedicalLabTechnician #d5e8d4
+class Receptionist #d5e8d4
+class Doctor #d5e8d4 {
+  specialty : String
+  nhsNumber : String
+}
+class Client #d5e8d4 {
+  citizenCardNumber : String
+  nhsNumber : String
+  taxIdentificationNumber : String
+  phoneNumber : String
+  emailAddress : String
+}
+class Test #fff2cc {
+  internalCode : String
+  nhsCode : String
+  collectionMethod : String
+}
+class BloodTest #fff2cc
+class COVID19Test #fff2cc {
+  result : {positive, negative}
+}
+class TestParameter #fff2cc {
+  uniqueCode : String
+  name : String
+  description : String
+  metric : String
+  minReferenceValue : Double
+  maxReferenceValue : Double
+}
+class Prescription #ffe6cc {
+  prescriptionDate : Date
+  testDate : Date
+}
+class Sample #ffe6cc {
+  barcode : String
+}
+class ChemicalAnalysis #ffe6cc {
+  result : String
+  analysisDateTime : DateTime
+}
+class Diagnosis #ffe6cc {
+  diagnosis : String
+  diagnosisDate : Date
+}
+
+
+
+
+' relacoes
+Laboratory <|-[norank]- Headquarters
+Person <|-left- Administrator
+Person <|-right- Receptionist
+Person <|-left- ClinicalChemistryTechnologist
+Person <|-right- MedicalLabTechnician
+Person <|-down- Doctor
+Person <|-down- Client
+Test <|-down- BloodTest
+Test <|-down- COVID19Test
+
+
+
+UKLabs "1" -left-> "1" Headquarters : has headquarters
+UKLabs "1" -right-> "1..*" Laboratory : has
+Headquarters "1" -down-> "1..*" ClinicalChemistryTechnologist : has
+Headquarters "1" -down-> "1..*" Administrator : has
+Laboratory "1" -down-> "1..*" Receptionist : has
+Laboratory "1" -down-> "1..*" MedicalLabTechnician : has
+UKLabs "1" -[norank]-> "1..*" Administrator : employs
+UKLabs "1" -[norank]-> "1..*" Receptionist : employs
+UKLabs "1" -[norank]-> "1..*" MedicalLabTechnician : employs
+Receptionist "1" -down-> "0..*" Client : attends and registers
+Doctor "1" -right-> "0..*" Diagnosis : makes
+Client "1" <-left- "0..*" Diagnosis : belongs to
+Client "1" -right-> "0..*" Prescription : has
+Doctor "1" -[norank]-> "0..*" Prescription : makes
+Doctor "0..1" <-down- "0..*" ChemicalAnalysis : interpreted by
+ClinicalChemistryTechnologist "1" -down-> "0..*" ChemicalAnalysis : performs
+ChemicalAnalysis "1" <-up- "0..1" Diagnosis : originates from
+Client "1" <-down- "0..*" Sample : extracted from
+Sample "1" <-left- "0..1" ChemicalAnalysis : results from
+MedicalLabTechnician "1" -down-> "0..*" Sample : extracts
+Sample "0..*" -right-> "1" Test : results from
+Prescription "0..*" -down-> "1" Test : associated with
+Test "1..*" -down-> "1..*" TestParameter : has
+Prescription "0..*" -[norank]-> "1..*" TestParameter : measures
+Laboratory "1" <-[norank]- "0..*" Prescription : performed at
+
+
+
+Headquarters -[hidden]right- UKLabs
+UKLabs -[hidden]right- Laboratory
+ClinicalChemistryTechnologist -[hidden]right- Administrator
+Administrator -[hidden]right- Person
+Person -[hidden]right- Receptionist
+Receptionist -[hidden]right- MedicalLabTechnician
+Doctor -[hidden]right- Diagnosis
+Diagnosis -[hidden]right- Client
+Client -[hidden]right- Prescription
+ChemicalAnalysis -[hidden]right- Sample
+Sample -[hidden]right- Test
+COVID19Test -[hidden]right- BloodTest
+BloodTest -[hidden]right- TestParameter
+
+
+@enduml
+
