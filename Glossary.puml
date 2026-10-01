@@ -1,0 +1,221 @@
+@startuml UKLabsMS_Domain_Model_v2
+title UKLabsMS - Glossary Model / Modelo do Glossário
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam monochrome true
+skinparam packageStyle rectangle
+hide empty methods
+
+package "Business domain / Domínio de negócio" {
+
+  class ClinicalAnalysisLaboratory <<Laboratório de análises clínicas>> {
+    code
+    address
+    phone
+    email
+    openingHour
+    closingHour
+  }
+
+  class ChemicalLaboratory <<Laboratório de química clínica>> {
+    location : London headquarters
+  }
+
+  class Client <<Cliente (utente)>> {
+    name
+    citizenCardNumber <<Nº cartão de cidadão>>
+    nhsNumber <<Nº de utente do SNS>>
+    birthDate
+    sex
+    tif <<NIF>>
+    phone
+    email
+  }
+
+  class LabOrder <<Requisição de análises>> {
+    prescriptionDate
+  }
+
+  class Test <<Teste (análise)>> {
+    nhsCode <<Código NHS>>
+    prescriptionDate
+    collectionDate
+  }
+
+  class Covid19Test <<Teste à Covid-19>> {
+    result : positive / negative
+  }
+
+  class Parameter <<Parâmetro>> {
+    code
+    name
+    description
+  }
+
+  class Metric <<Métrica (unidade de medida)>> {
+    unit : g/dL, mg/dL, U/l
+  }
+
+  class ReferenceValues <<Valores de referência>> {
+    minimum
+    maximum
+  }
+
+  class Sample <<Amostra>> {
+    barcode <<Código de barras>>
+  }
+
+  class SampleCollection <<Colheita de amostras>>
+  class ChemicalAnalysis <<Análise química>> {
+    dateTime
+  }
+
+  class Result <<Resultado>> {
+    value
+    dateTime
+  }
+
+  class Diagnosis <<Diagnóstico>>
+  class Report <<Relatório>>
+  class Notification <<Notificação>> {
+    channel : SMS / e-mail
+  }
+
+  abstract class Employee <<Funcionário>>
+  class Receptionist <<Rececionista>>
+  class MedicalLabTechnician <<Técnico de análises clínicas>>
+  class ClinicalChemistryTechnologist <<Técnico de química clínica>>
+  class SpecialistDoctor <<Médico especialista>>
+  class Administrator <<Administrador>>
+  class Courier <<Estafeta>>
+}
+
+package "System and architecture / Sistema e arquitetura" {
+  class UKLabsMS <<Sistema de Gestão da UK Labs>>
+  class ServerSideApplication <<Aplicação do lado do servidor (back-end)>>
+  class ClientSideApplication <<Aplicação do lado do cliente (front-end)>>
+  class ConsoleUI <<Interface de consola>>
+  class BusinessLogic <<Lógica de negócio>>
+  class DataPersistence <<Persistência de dados>> {
+    relational
+    NoSQL
+    in-memory
+  }
+  class Authentication <<Autenticação (simulada)>>
+  class Prototype <<Protótipo>>
+}
+
+package "Quality / Qualidade" {
+  abstract class NonFunctionalRequirement <<Requisito não funcional>>
+  class StartUpTime <<Tempo de arranque>> {
+    max : 10 s
+  }
+  class ResponseTime <<Tempo de resposta>> {
+    max : 5 s
+  }
+  class Availability <<Disponibilidade>> {
+    min : 99% / year
+  }
+  class DataLoss <<Perda de dados>> {
+    allowed : none
+  }
+  class RegressionTesting <<Testes de regressão>> {
+    framework : Google Test
+  }
+}
+
+package "Working method / Método de trabalho" {
+  class SupplierCompany <<Empresa fornecedora>>
+  class Sprint <<Sprint>> {
+    deadline : Sunday 23:59
+  }
+  class RequirementsEngineering <<Engenharia de requisitos>>
+  class BusinessAnalysis <<Análise de negócio>>
+  class Traceability <<Rastreabilidade>>
+  class DesignPatternsAndPrinciples <<Padrões e princípios de design>>
+  class VersionControlSystem <<Sistema de controlo de versões (GitHub)>> {
+    repository : leti-esoft-26-27-[LabClass][TeamNumber]
+  }
+  class Artifact <<Artefacto>> {
+    images : SVG
+  }
+}
+
+' ---------- Business domain ----------
+Employee <|-- Receptionist
+Employee <|-- MedicalLabTechnician
+Employee <|-- ClinicalChemistryTechnologist
+Employee <|-- SpecialistDoctor
+Employee <|-- Administrator
+Employee <|-- Courier
+Test <|-- Covid19Test
+
+Client "1" -- "*" Test : undergoes >
+Client "1" -- "*" LabOrder : brings >
+LabOrder "1" -- "1..*" Parameter : lists >
+Test "*" --> "1" ClinicalAnalysisLaboratory : collected at >
+Test "1" -- "0..1" LabOrder : based on >
+Test "1" o-- "1..*" Parameter : measures >
+Parameter "*" --> "1" Metric : expressed in >
+Parameter "1" *-- "0..1" ReferenceValues : normal range >
+Test "1" *-- "1..*" Sample : has >
+Sample "*" --> "1" SampleCollection : from >
+Test "1" *-- "1..*" Result : produces >
+Result "*" --> "1" Parameter : of >
+ChemicalAnalysis "1" --> "1..*" Result : records >
+ChemicalAnalysis "*" --> "1..*" Sample : processes >
+Test "1" -- "0..1" Report : described by >
+Report "1" *-- "1" Diagnosis : contains >
+Report "1" -- "*" Notification : triggers >
+Notification "*" --> "1" Client : sent to >
+
+Receptionist "1" -- "*" Client : registers >
+Receptionist "1" -- "*" Test : registers >
+MedicalLabTechnician "1" -- "*" SampleCollection : performs >
+Courier "1" -- "*" Sample : delivers >
+ChemicalLaboratory "1" -- "*" Sample : receives >
+ChemicalLaboratory "1" -- "*" ChemicalAnalysis : hosts >
+ClinicalChemistryTechnologist "1" -- "*" ChemicalAnalysis : performs >
+SpecialistDoctor "1" -- "*" Report : writes >
+Administrator ..> Test : manages
+Administrator ..> Parameter : manages
+Administrator ..> ClinicalAnalysisLaboratory : manages
+Administrator ..> Employee : manages
+
+note right of Report
+  Business rule / Regra de negócio:
+  the Client can only view Results
+  after the Report exists.
+  O Cliente só vê os Resultados
+  depois de existir o Relatório.
+end note
+
+' ---------- System ----------
+UKLabsMS *-- "1" ServerSideApplication
+UKLabsMS *-- "1..*" ClientSideApplication
+ClientSideApplication <|-- ConsoleUI
+ServerSideApplication *-- BusinessLogic
+ServerSideApplication *-- DataPersistence
+UKLabsMS ..> Authentication : uses
+Prototype ..> UKLabsMS : demonstrates
+BusinessLogic ..> Report : enforces access to results
+
+' ---------- Quality ----------
+NonFunctionalRequirement <|-- StartUpTime
+NonFunctionalRequirement <|-- ResponseTime
+NonFunctionalRequirement <|-- Availability
+NonFunctionalRequirement <|-- DataLoss
+UKLabsMS ..> NonFunctionalRequirement : must satisfy
+RegressionTesting ..> UKLabsMS : verifies
+
+' ---------- Working method ----------
+SupplierCompany "1" -- "4" Sprint : delivers in >
+SupplierCompany ..> Prototype : builds
+Sprint ..> RequirementsEngineering : focus (1)
+Sprint ..> BusinessAnalysis : focus (1-2)
+Sprint ..> DesignPatternsAndPrinciples : focus (3)
+Sprint ..> Prototype : focus (4)
+RequirementsEngineering ..> Traceability
+VersionControlSystem "1" o-- "*" Artifact : stores >
+SupplierCompany ..> VersionControlSystem : uses
+@enduml
